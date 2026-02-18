@@ -1,523 +1,382 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Demo 1 — Stanza + Formule · MathAR</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Demo 01 — Stanza + Formule · MathAR</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0B1F4B;--blue:#1A56DB;--orange:#E07B39;
+  --glass:rgba(11,31,75,0.82);
+  --glass-light:rgba(255,255,255,0.13);
+}
+body{
+  font-family:'Inter',sans-serif;
+  background:#000;overflow:hidden;
+  height:100dvh;width:100vw;
+  position:relative;
+}
 
-  <!-- A-Frame + AR.js -->
-  <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
-  <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+/* ── CAMERA ── */
+#video{
+  position:fixed;top:0;left:0;
+  width:100%;height:100%;
+  object-fit:cover;
+  transform:scaleX(-1); /* mirror front cam; remove if back cam */
+}
+#canvas{
+  position:fixed;top:0;left:0;
+  width:100%;height:100%;
+  pointer-events:none;
+  z-index:2;
+}
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+/* ── TOP BAR ── */
+.topbar{
+  position:fixed;top:0;left:0;right:0;
+  z-index:50;
+  padding:env(safe-area-inset-top,0.75rem) 1.25rem 0.75rem;
+  padding-top:max(env(safe-area-inset-top),0.75rem);
+  background:var(--glass);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-bottom:1px solid rgba(255,255,255,0.08);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.back{
+  font-size:0.85rem;font-weight:500;
+  color:rgba(255,255,255,0.75);
+  text-decoration:none;
+  display:flex;align-items:center;gap:0.3rem;
+  padding:0.35rem 0.75rem;
+  background:rgba(255,255,255,0.08);
+  border-radius:20px;
+  -webkit-tap-highlight-color:transparent;
+}
+.title-bar{font-size:0.88rem;font-weight:500;color:#fff}
+.demo-chip{
+  font-size:0.6rem;font-weight:700;letter-spacing:0.14em;
+  text-transform:uppercase;color:var(--blue);
+  background:rgba(26,86,219,0.2);
+  border:1px solid rgba(26,86,219,0.35);
+  padding:0.25rem 0.65rem;border-radius:20px;
+}
 
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+/* ── SCAN GUIDE ── */
+.scan-guide{
+  position:fixed;
+  top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  z-index:10;
+  width:min(280px,75vw);
+  height:min(280px,75vw);
+  pointer-events:none;
+  transition:opacity 0.4s;
+}
+.scan-guide.hidden{opacity:0}
+.corner{
+  position:absolute;
+  width:28px;height:28px;
+  border-color:rgba(255,255,255,0.7);
+  border-style:solid;
+}
+.corner.tl{top:0;left:0;border-width:3px 0 0 3px;border-radius:4px 0 0 0}
+.corner.tr{top:0;right:0;border-width:3px 3px 0 0;border-radius:0 4px 0 0}
+.corner.bl{bottom:0;left:0;border-width:0 0 3px 3px;border-radius:0 0 0 4px}
+.corner.br{bottom:0;right:0;border-width:0 3px 3px 0;border-radius:0 0 4px 0}
+.scan-label{
+  position:absolute;bottom:-2rem;left:50%;
+  transform:translateX(-50%);
+  font-size:0.75rem;color:rgba(255,255,255,0.6);
+  white-space:nowrap;font-weight:500;letter-spacing:0.05em;
+}
 
-    :root {
-      --navy: #0B1F4B;
-      --blue: #1A56DB;
-      --light-blue: #EBF2FF;
-      --orange: #E07B39;
-      --white: #FFFFFF;
-      --gray: #6B7280;
-    }
+/* ── OBJECT BUTTONS ── */
+.obj-strip{
+  position:fixed;
+  bottom:calc(env(safe-area-inset-bottom,0px) + 5.5rem);
+  left:0;right:0;
+  z-index:50;
+  display:flex;
+  justify-content:center;
+  gap:0.6rem;
+  padding:0 1rem;
+  flex-wrap:wrap;
+}
+.obj-btn{
+  display:flex;align-items:center;gap:0.45rem;
+  background:var(--glass);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border:1px solid rgba(255,255,255,0.14);
+  border-radius:40px;
+  padding:0.6rem 1.1rem;
+  color:#fff;font-size:0.82rem;font-weight:500;
+  font-family:'Inter',sans-serif;cursor:pointer;
+  transition:all 0.18s;
+  -webkit-tap-highlight-color:transparent;
+  active-transform:scale(0.95);
+}
+.obj-btn:active{transform:scale(0.94);background:rgba(26,86,219,0.5)}
+.obj-btn .em{font-size:1rem}
 
-    body {
-      font-family: 'Inter', -apple-system, sans-serif;
-      background: #000;
-      overflow: hidden;
-      height: 100vh;
-      width: 100vw;
-    }
+/* ── INSTRUCTION ── */
+.instruction{
+  position:fixed;
+  bottom:calc(env(safe-area-inset-bottom,0px) + 1rem);
+  left:50%;transform:translateX(-50%);
+  z-index:50;
+  background:var(--glass);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:16px;padding:0.9rem 1.4rem;
+  color:#fff;text-align:center;
+  max-width:320px;width:calc(100% - 2rem);
+  transition:all 0.4s;
+}
+.instruction.hidden{
+  opacity:0;transform:translateX(-50%) translateY(20px);
+  pointer-events:none;
+}
+.instruction p{font-size:0.78rem;color:rgba(255,255,255,0.65);line-height:1.5;margin-top:0.2rem}
 
-    /* ── TOP BAR ── */
-    .topbar {
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      z-index: 100;
-      padding: 1rem 1.5rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: rgba(11,31,75,0.75);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-    }
+/* ── FORMULA PANEL ── */
+.panel{
+  position:fixed;
+  bottom:calc(env(safe-area-inset-bottom,0px) + 1rem);
+  left:50%;transform:translateX(-50%) scale(0.94);
+  z-index:60;
+  background:rgba(255,255,255,0.13);
+  backdrop-filter:blur(32px);-webkit-backdrop-filter:blur(32px);
+  border:1px solid rgba(255,255,255,0.22);
+  border-radius:22px;
+  padding:1.5rem;
+  color:#fff;
+  max-width:380px;width:calc(100% - 2rem);
+  opacity:0;pointer-events:none;
+  transition:all 0.35s cubic-bezier(0.34,1.56,0.64,1);
+}
+.panel.open{
+  opacity:1;pointer-events:all;
+  transform:translateX(-50%) scale(1);
+}
+.panel-top{
+  display:flex;justify-content:space-between;
+  align-items:flex-start;margin-bottom:1rem;
+}
+.panel-subject{
+  font-size:0.6rem;font-weight:700;
+  letter-spacing:0.16em;text-transform:uppercase;
+  color:rgba(255,255,255,0.45);margin-bottom:0.25rem;
+}
+.panel-title{font-size:1.05rem;font-weight:600}
+.close-btn{
+  background:rgba(255,255,255,0.12);border:none;
+  border-radius:50%;width:30px;height:30px;
+  color:#fff;font-size:1.1rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;margin-left:0.5rem;
+  font-family:'Inter',sans-serif;
+  -webkit-tap-highlight-color:transparent;
+}
+.close-btn:active{background:rgba(255,255,255,0.25)}
+.formula-box{
+  background:rgba(26,86,219,0.28);
+  border:1px solid rgba(26,86,219,0.5);
+  border-radius:12px;padding:1rem 1.25rem;
+  font-size:1.3rem;font-weight:300;
+  text-align:center;margin-bottom:0.75rem;
+  letter-spacing:0.03em;
+}
+.panel-context{
+  font-size:0.78rem;color:rgba(255,255,255,0.62);
+  line-height:1.6;margin-bottom:0.75rem;
+}
+.panel-note{
+  font-size:0.72rem;color:rgba(255,255,255,0.4);
+  line-height:1.5;
+}
+.panel-tag{
+  display:inline-block;margin-top:1rem;
+  font-size:0.68rem;font-weight:600;
+  letter-spacing:0.1em;text-transform:uppercase;
+  color:rgba(147,180,240,0.8);
+  border:1px solid rgba(147,180,240,0.25);
+  border-radius:20px;padding:0.3rem 0.75rem;
+}
 
-    .topbar-left {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-    }
-
-    .back-btn {
-      display: flex; align-items: center; gap: 0.4rem;
-      font-size: 0.875rem;
-      color: rgba(255,255,255,0.7);
-      text-decoration: none;
-      transition: color 0.2s;
-    }
-
-    .back-btn:hover { color: #fff; }
-
-    .demo-title {
-      font-size: 0.875rem;
-      font-weight: 500;
-      color: #fff;
-      letter-spacing: 0.01em;
-    }
-
-    .demo-tag {
-      font-size: 0.65rem;
-      font-weight: 600;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: #1A56DB;
-      background: rgba(26,86,219,0.15);
-      padding: 0.2rem 0.6rem;
-      border-radius: 20px;
-      border: 1px solid rgba(26,86,219,0.3);
-    }
-
-    /* ── INSTRUCTION CARD ── */
-    .instruction {
-      position: fixed;
-      bottom: 2rem;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 100;
-      background: rgba(11,31,75,0.8);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 16px;
-      padding: 1rem 1.5rem;
-      color: #fff;
-      text-align: center;
-      max-width: 340px;
-      width: calc(100% - 3rem);
-      transition: all 0.4s ease;
-    }
-
-    .instruction.hidden {
-      opacity: 0;
-      transform: translateX(-50%) translateY(20px);
-      pointer-events: none;
-    }
-
-    .instruction-icon {
-      font-size: 1.75rem;
-      margin-bottom: 0.5rem;
-      animation: float 3s ease-in-out infinite;
-    }
-
-    @keyframes float {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-6px); }
-    }
-
-    .instruction h3 {
-      font-size: 0.9rem;
-      font-weight: 600;
-      margin-bottom: 0.25rem;
-    }
-
-    .instruction p {
-      font-size: 0.75rem;
-      color: rgba(255,255,255,0.6);
-      line-height: 1.5;
-    }
-
-    /* ── FORMULA PANEL (HTML overlay triggered by tap) ── */
-    .formula-panel {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%) scale(0.9);
-      z-index: 200;
-      background: rgba(255,255,255,0.12);
-      backdrop-filter: blur(30px);
-      -webkit-backdrop-filter: blur(30px);
-      border: 1px solid rgba(255,255,255,0.2);
-      border-radius: 20px;
-      padding: 2rem;
-      color: #fff;
-      min-width: 280px;
-      max-width: 360px;
-      opacity: 0;
-      pointer-events: none;
-      transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
-
-    .formula-panel.visible {
-      opacity: 1;
-      pointer-events: all;
-      transform: translate(-50%, -50%) scale(1);
-    }
-
-    .panel-subject {
-      font-size: 0.65rem;
-      font-weight: 600;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      color: rgba(255,255,255,0.5);
-      margin-bottom: 0.5rem;
-    }
-
-    .panel-title {
-      font-size: 1.1rem;
-      font-weight: 600;
-      margin-bottom: 0.25rem;
-    }
-
-    .panel-context {
-      font-size: 0.8rem;
-      color: rgba(255,255,255,0.6);
-      margin-bottom: 1.25rem;
-      line-height: 1.5;
-    }
-
-    .formula-box {
-      background: rgba(26,86,219,0.25);
-      border: 1px solid rgba(26,86,219,0.4);
-      border-radius: 12px;
-      padding: 1rem 1.25rem;
-      margin-bottom: 0.75rem;
-      font-size: 1.2rem;
-      font-weight: 300;
-      letter-spacing: 0.02em;
-      text-align: center;
-    }
-
-    .formula-note {
-      font-size: 0.75rem;
-      color: rgba(255,255,255,0.5);
-      line-height: 1.6;
-      margin-bottom: 1.25rem;
-    }
-
-    .panel-link {
-      display: block;
-      text-align: center;
-      font-size: 0.8rem;
-      font-weight: 500;
-      color: #93B4F0;
-      text-decoration: none;
-      padding: 0.6rem;
-      border: 1px solid rgba(147,180,240,0.3);
-      border-radius: 8px;
-      transition: all 0.2s;
-    }
-
-    .panel-link:hover {
-      background: rgba(147,180,240,0.1);
-    }
-
-    .close-btn {
-      position: absolute;
-      top: 1rem; right: 1rem;
-      background: rgba(255,255,255,0.1);
-      border: none;
-      border-radius: 50%;
-      width: 28px; height: 28px;
-      color: #fff;
-      font-size: 1rem;
-      cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      transition: background 0.2s;
-    }
-
-    .close-btn:hover { background: rgba(255,255,255,0.2); }
-
-    /* ── OBJECT BUTTONS (bottom HUD) ── */
-    .objects-hud {
-      position: fixed;
-      bottom: 7rem;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 100;
-      display: flex;
-      gap: 0.75rem;
-      flex-wrap: wrap;
-      justify-content: center;
-      padding: 0 1rem;
-    }
-
-    .obj-btn {
-      background: rgba(11,31,75,0.75);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 40px;
-      padding: 0.5rem 1rem;
-      color: #fff;
-      font-size: 0.8rem;
-      font-weight: 500;
-      font-family: 'Inter', sans-serif;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-      transition: all 0.2s;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    .obj-btn:hover, .obj-btn:active {
-      background: rgba(26,86,219,0.5);
-      border-color: rgba(26,86,219,0.6);
-      transform: scale(1.04);
-    }
-
-    /* ── AR CANVAS ── */
-    a-scene {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-    }
-  </style>
+/* ── RIPPLE ── */
+.ripple{
+  position:fixed;
+  border-radius:50%;
+  background:rgba(26,86,219,0.35);
+  transform:scale(0);
+  animation:ripple-anim 0.6s ease-out forwards;
+  pointer-events:none;z-index:5;
+}
+@keyframes ripple-anim{
+  to{transform:scale(4);opacity:0}
+}
+</style>
 </head>
 <body>
 
-  <!-- TOP BAR -->
-  <div class="topbar">
-    <div class="topbar-left">
-      <a href="../index.html" class="back-btn">← Indietro</a>
+<video id="video" autoplay playsinline muted></video>
+<canvas id="canvas"></canvas>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <a href="../index.html" class="back">← Indietro</a>
+  <span class="title-bar">Spazio AR — Formule</span>
+  <span class="demo-chip">Demo 01</span>
+</div>
+
+<!-- SCAN GUIDE -->
+<div class="scan-guide" id="scanGuide">
+  <div class="corner tl"></div>
+  <div class="corner tr"></div>
+  <div class="corner bl"></div>
+  <div class="corner br"></div>
+  <div class="scan-label">Inquadra un oggetto</div>
+</div>
+
+<!-- OBJECT BUTTONS -->
+<div class="obj-strip" id="objStrip">
+  <button class="obj-btn" onclick="showFormula('pavimento',event)"><span class="em">🟫</span> Pavimento</button>
+  <button class="obj-btn" onclick="showFormula('lampada',event)"><span class="em">💡</span> Lampada / Sfera</button>
+  <button class="obj-btn" onclick="showFormula('finestra',event)"><span class="em">⬜</span> Finestra</button>
+  <button class="obj-btn" onclick="showFormula('tavolo',event)"><span class="em">🪵</span> Tavolo</button>
+</div>
+
+<!-- INSTRUCTION -->
+<div class="instruction" id="instr">
+  <strong>📐 Punta la fotocamera verso un oggetto</strong>
+  <p>Poi tocca il pulsante corrispondente per vedere la formula matematica che lo descrive.</p>
+</div>
+
+<!-- FORMULA PANEL -->
+<div class="panel" id="panel">
+  <div class="panel-top">
+    <div>
+      <div class="panel-subject" id="pSubject">GEOMETRIA</div>
+      <div class="panel-title" id="pTitle">Area</div>
     </div>
-    <span class="demo-title">Spazio AR — Formule nell'ambiente</span>
-    <span class="demo-tag">Demo 01</span>
-  </div>
-
-  <!-- INSTRUCTION -->
-  <div class="instruction" id="instruction">
-    <div class="instruction-icon">📐</div>
-    <h3>Muovi lentamente l'iPad</h3>
-    <p>Punta la fotocamera verso pavimento, pareti e oggetti. Poi tocca un pulsante per vedere la formula dell'oggetto.</p>
-  </div>
-
-  <!-- OBJECT BUTTONS HUD -->
-  <div class="objects-hud" id="hud">
-    <button class="obj-btn" onclick="showFormula('pavimento')">🟫 Pavimento</button>
-    <button class="obj-btn" onclick="showFormula('lampada')">💡 Lampada</button>
-    <button class="obj-btn" onclick="showFormula('finestra')">⬜ Finestra</button>
-    <button class="obj-btn" onclick="showFormula('tavolo')">🪵 Tavolo</button>
-  </div>
-
-  <!-- FORMULA PANEL -->
-  <div class="formula-panel" id="formulaPanel">
     <button class="close-btn" onclick="closePanel()">×</button>
-    <div class="panel-subject" id="panelSubject">GEOMETRIA PIANA</div>
-    <div class="panel-title" id="panelTitle">Area del rettangolo</div>
-    <div class="panel-context" id="panelContext">Il pavimento è una superficie piana. Possiamo calcolarne l'area moltiplicando base e altezza.</div>
-    <div class="formula-box" id="panelFormula">A = b × h</div>
-    <div class="formula-note" id="panelNote">dove b = base, h = altezza della superficie</div>
-    <a href="#" class="panel-link" id="panelLink">→ Apri la lezione nell'app</a>
   </div>
+  <div class="formula-box" id="pFormula">A = b × h</div>
+  <div class="panel-context" id="pContext">Contesto</div>
+  <div class="panel-note" id="pNote">Note</div>
+  <div class="panel-tag" id="pTag">Geometria piana</div>
+</div>
 
-  <!-- AR SCENE -->
-  <a-scene
-    embedded
-    arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
-    vr-mode-ui="enabled: false"
-    renderer="logarithmicDepthBuffer: true; antialias: true;"
-    loading-screen="enabled: false">
+<script>
+// ── CAMERA ──
+const video = document.getElementById('video');
+const canvas = document.getElementById('canvas');
 
-    <a-assets>
-      <!-- Text geometry for floating labels -->
-    </a-assets>
-
-    <!-- Floating formula labels that appear in AR space -->
-    <!-- These are always visible as ambient decoration -->
-    <a-entity id="ar-formulas">
-
-      <!-- Area formula - floats at mid height -->
-      <a-entity
-        position="0 1.2 -2"
-        rotation="0 0 0"
-        id="formula-area">
-        <a-plane
-          width="1.8" height="0.6"
-          color="#0B1F4B"
-          opacity="0.85"
-          material="transparent: true; opacity: 0.85"
-          rounded="true">
-        </a-plane>
-        <a-text
-          value="A = b × h"
-          color="#FFFFFF"
-          align="center"
-          width="3"
-          position="0 0.08 0.01">
-        </a-text>
-        <a-text
-          value="Area"
-          color="#93B4F0"
-          align="center"
-          width="1.5"
-          position="0 -0.15 0.01">
-        </a-text>
-        <a-animation attribute="position" from="0 1.2 -2" to="0 1.35 -2"
-          dur="3000" direction="alternate" repeat="indefinite" easing="ease-in-out-sine">
-        </a-animation>
-      </a-entity>
-
-      <!-- Circle formula -->
-      <a-entity
-        position="-1.5 1.5 -2.5"
-        rotation="0 15 0"
-        id="formula-circle">
-        <a-plane
-          width="2" height="0.65"
-          color="#0B1F4B"
-          opacity="0.85"
-          material="transparent: true; opacity: 0.85">
-        </a-plane>
-        <a-text
-          value="x² + y² = r²"
-          color="#FFFFFF"
-          align="center"
-          width="3.2"
-          position="0 0.08 0.01">
-        </a-text>
-        <a-text
-          value="Circonferenza"
-          color="#93B4F0"
-          align="center"
-          width="1.8"
-          position="0 -0.15 0.01">
-        </a-text>
-        <a-animation attribute="position" from="-1.5 1.5 -2.5" to="-1.5 1.65 -2.5"
-          dur="3800" direction="alternate" repeat="indefinite" easing="ease-in-out-sine">
-        </a-animation>
-      </a-entity>
-
-      <!-- Pythagorean theorem -->
-      <a-entity
-        position="1.8 1.3 -2.2"
-        rotation="0 -20 0"
-        id="formula-pythagoras">
-        <a-plane
-          width="2" height="0.65"
-          color="#0B1F4B"
-          opacity="0.85"
-          material="transparent: true; opacity: 0.85">
-        </a-plane>
-        <a-text
-          value="c² = a² + b²"
-          color="#FFFFFF"
-          align="center"
-          width="3.2"
-          position="0 0.08 0.01">
-        </a-text>
-        <a-text
-          value="Teorema di Pitagora"
-          color="#93B4F0"
-          align="center"
-          width="1.8"
-          position="0 -0.15 0.01">
-        </a-text>
-        <a-animation attribute="position" from="1.8 1.3 -2.2" to="1.8 1.5 -2.2"
-          dur="4200" direction="alternate" repeat="indefinite" easing="ease-in-out-sine">
-        </a-animation>
-      </a-entity>
-
-      <!-- Perimeter formula - lower -->
-      <a-entity
-        position="0 0.5 -1.8"
-        rotation="-20 0 0"
-        id="formula-perimeter">
-        <a-plane
-          width="2.2" height="0.65"
-          color="#1A56DB"
-          opacity="0.75"
-          material="transparent: true; opacity: 0.75">
-        </a-plane>
-        <a-text
-          value="P = 2(b + h)"
-          color="#FFFFFF"
-          align="center"
-          width="3.5"
-          position="0 0.08 0.01">
-        </a-text>
-        <a-text
-          value="Perimetro"
-          color="rgba(255,255,255,0.7)"
-          align="center"
-          width="2"
-          position="0 -0.15 0.01">
-        </a-text>
-        <a-animation attribute="position" from="0 0.5 -1.8" to="0 0.62 -1.8"
-          dur="3400" direction="alternate" repeat="indefinite" easing="ease-in-out-sine">
-        </a-animation>
-      </a-entity>
-
-    </a-entity>
-
-    <a-camera position="0 1.6 0" look-controls wasd-controls="enabled: false">
-    </a-camera>
-
-  </a-scene>
-
-  <script>
-    const formulas = {
-      pavimento: {
-        subject: 'GEOMETRIA PIANA',
-        title: 'Area del rettangolo',
-        context: 'Il pavimento è una superficie piana rettangolare. Possiamo calcolarne l\'area moltiplicando le due dimensioni.',
-        formula: 'A = b × h',
-        note: 'b = base (larghezza del pavimento)  ·  h = altezza (lunghezza del pavimento)',
-        link: '#geometria'
-      },
-      lampada: {
-        subject: 'GEOMETRIA ANALITICA',
-        title: 'Equazione della sfera',
-        context: 'L\'involucro sferico della lampada è descritto dall\'equazione della sfera nello spazio tridimensionale.',
-        formula: 'x² + y² + z² = r²',
-        note: 'Il centro è nell\'origine O(0,0,0)  ·  r = raggio della sfera',
-        link: '#analitica'
-      },
-      finestra: {
-        subject: 'GEOMETRIA PIANA',
-        title: 'Perimetro del rettangolo',
-        context: 'La finestra è un rettangolo. Il perimetro è la somma di tutti i lati — utile per calcolare quanta guarnizione serve.',
-        formula: 'P = 2(b + h)',
-        note: 'b = base (larghezza)  ·  h = altezza della finestra',
-        link: '#geometria'
-      },
-      tavolo: {
-        subject: 'FISICA — STATICA',
-        title: 'Pressione su una superficie',
-        context: 'Il tavolo esercita una forza sul pavimento distribuita sulla sua superficie. La pressione è forza diviso area.',
-        formula: 'p = F / A',
-        note: 'p = pressione [Pa]  ·  F = forza peso [N]  ·  A = area base [m²]',
-        link: '#fisica'
-      }
-    };
-
-    function showFormula(type) {
-      const data = formulas[type];
-      document.getElementById('panelSubject').textContent = data.subject;
-      document.getElementById('panelTitle').textContent = data.title;
-      document.getElementById('panelContext').textContent = data.context;
-      document.getElementById('panelFormula').textContent = data.formula;
-      document.getElementById('panelNote').textContent = data.note;
-      document.getElementById('panelLink').href = data.link;
-
-      document.getElementById('formulaPanel').classList.add('visible');
-      document.getElementById('instruction').classList.add('hidden');
+async function startCamera(){
+  try{
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video:{facingMode:{ideal:'environment'},width:{ideal:1920},height:{ideal:1080}},
+      audio:false
+    });
+    video.srcObject = stream;
+    video.style.transform = 'none'; // back camera, no mirror
+  } catch(e){
+    console.warn('Back camera failed, trying any camera',e);
+    try{
+      const stream = await navigator.mediaDevices.getUserMedia({video:true,audio:false});
+      video.srcObject = stream;
+    } catch(e2){
+      document.body.style.background='#0B1F4B';
+      document.body.innerHTML+='<div style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);color:white;text-align:center;padding:2rem;font-family:Inter,sans-serif"><p style="font-size:1.1rem;font-weight:600;margin-bottom:0.5rem">Accesso fotocamera negato</p><p style="font-size:0.85rem;opacity:0.6">Vai in Impostazioni e consenti l\'accesso alla fotocamera per questo sito</p></div>';
     }
+  }
+}
+startCamera();
 
-    function closePanel() {
-      document.getElementById('formulaPanel').classList.remove('visible');
-    }
+// ── SCAN ANIMATION ──
+let scanDir = 1, scanY = 0;
+function animateScan(){
+  const guide = document.getElementById('scanGuide');
+  if(!guide.classList.contains('hidden')){
+    scanY += scanDir * 0.5;
+    if(scanY>100||scanY<0) scanDir*=-1;
+  }
+  requestAnimationFrame(animateScan);
+}
+animateScan();
 
-    // Auto-hide instruction after 5 seconds
-    setTimeout(() => {
-      document.getElementById('instruction').style.opacity = '0.5';
-    }, 5000);
-  </script>
+// ── DATA ──
+const data = {
+  pavimento:{
+    subject:'GEOMETRIA PIANA',
+    title:'Area del rettangolo',
+    formula:'A = b × h',
+    context:'Il pavimento è una superficie piana rettangolare. Per sapere quanti m² di parquet servono, si moltiplicano base e altezza.',
+    note:'b = larghezza del pavimento  ·  h = lunghezza del pavimento  ·  A = area in m²',
+    tag:'Geometria piana'
+  },
+  lampada:{
+    subject:'GEOMETRIA ANALITICA',
+    title:'Equazione della sfera',
+    formula:'x² + y² + z² = r²',
+    context:"L'involucro sferico della lampada è un insieme di punti equidistanti dal centro. Questa è l'equazione della sfera nello spazio 3D.",
+    note:'Il centro è nell\'origine O(0,0,0)  ·  r = raggio della sfera  ·  tutti i punti sono a distanza r dal centro',
+    tag:'Geometria analitica · 3D'
+  },
+  finestra:{
+    subject:'GEOMETRIA PIANA',
+    title:'Perimetro del rettangolo',
+    formula:'P = 2(b + h)',
+    context:'Il perimetro della finestra è la somma di tutti i suoi lati. Utile per calcolare quanta guarnizione o cornice serve.',
+    note:'b = base (larghezza)  ·  h = altezza  ·  P = perimetro totale in metri',
+    tag:'Geometria piana'
+  },
+  tavolo:{
+    subject:'FISICA — STATICA',
+    title:'Pressione su una superficie',
+    formula:'p = F / A',
+    context:'Il tavolo distribuisce il suo peso sulla superficie di appoggio. La pressione è la forza (peso) divisa per l\'area della base.',
+    note:'p = pressione [Pa = N/m²]  ·  F = forza peso [Newton]  ·  A = area base [m²]',
+    tag:'Fisica · Statica'
+  }
+};
 
+// ── PANEL ──
+let panelOpen = false;
+
+function showFormula(key, evt){
+  // Ripple
+  const btn = evt.currentTarget;
+  const rect = btn.getBoundingClientRect();
+  const r = document.createElement('div');
+  r.className = 'ripple';
+  const size = 60;
+  r.style.cssText = `width:${size}px;height:${size}px;left:${rect.left+rect.width/2-size/2}px;top:${rect.top+rect.height/2-size/2}px`;
+  document.body.appendChild(r);
+  setTimeout(()=>r.remove(), 700);
+
+  const d = data[key];
+  document.getElementById('pSubject').textContent = d.subject;
+  document.getElementById('pTitle').textContent = d.title;
+  document.getElementById('pFormula').textContent = d.formula;
+  document.getElementById('pContext').textContent = d.context;
+  document.getElementById('pNote').textContent = d.note;
+  document.getElementById('pTag').textContent = d.tag;
+
+  document.getElementById('panel').classList.add('open');
+  document.getElementById('instr').classList.add('hidden');
+  document.getElementById('scanGuide').classList.add('hidden');
+  panelOpen = true;
+}
+
+function closePanel(){
+  document.getElementById('panel').classList.remove('open');
+  document.getElementById('instr').classList.remove('hidden');
+  document.getElementById('scanGuide').classList.remove('hidden');
+  panelOpen = false;
+}
+</script>
 </body>
 </html>
