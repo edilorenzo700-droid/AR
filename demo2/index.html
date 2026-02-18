@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Demo 2 — Coniche: La Parabola · MathAR</title>
+
+  <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+  <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: #000;
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    /* TOP BAR */
+    .topbar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      padding: 1rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(11,31,75,0.78);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .back-btn { font-size: 0.875rem; color: rgba(255,255,255,0.7); text-decoration: none; }
+    .demo-title { font-size: 0.875rem; font-weight: 500; color: #fff; }
+    .demo-tag {
+      font-size: 0.65rem; font-weight: 700; letter-spacing: 0.12em;
+      text-transform: uppercase; color: #E07B39;
+      background: rgba(224,123,57,0.15);
+      padding: 0.2rem 0.6rem; border-radius: 20px;
+      border: 1px solid rgba(224,123,57,0.3);
+    }
+
+    /* MARKER STATUS */
+    .marker-status {
+      position: fixed; top: 4.5rem; left: 50%;
+      transform: translateX(-50%);
+      z-index: 100;
+      display: flex; align-items: center; gap: 0.5rem;
+      background: rgba(16,185,129,0.18);
+      border: 1px solid rgba(16,185,129,0.4);
+      border-radius: 20px; padding: 0.4rem 1rem;
+      font-size: 0.75rem; font-weight: 500; color: #6EE7B7;
+      opacity: 0; transition: opacity 0.3s;
+    }
+    .marker-status.visible { opacity: 1; }
+    .status-dot {
+      width: 7px; height: 7px; background: #10B981;
+      border-radius: 50%;
+      animation: pulse 1s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.75); }
+    }
+
+    /* INSTRUCTION (before marker) */
+    .instruction {
+      position: fixed; bottom: 2rem; left: 50%;
+      transform: translateX(-50%);
+      z-index: 100;
+      background: rgba(11,31,75,0.88);
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 20px; padding: 1.25rem 1.75rem;
+      color: #fff; text-align: center;
+      max-width: 340px; width: calc(100% - 3rem);
+      transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .instruction.hidden {
+      opacity: 0; transform: translateX(-50%) translateY(30px);
+      pointer-events: none;
+    }
+    .instruction-icon {
+      font-size: 2rem; margin-bottom: 0.6rem;
+      animation: float 3s ease-in-out infinite;
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+    .instruction h3 { font-size: 1rem; font-weight: 600; margin-bottom: 0.3rem; }
+    .instruction p { font-size: 0.78rem; color: rgba(255,255,255,0.55); line-height: 1.6; }
+
+    /* RIGHT INFO CARD */
+    .info-card {
+      position: fixed; top: 5.5rem; right: 1rem;
+      z-index: 100;
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 18px; padding: 1.25rem 1.25rem 1rem;
+      color: #fff; width: 195px;
+      opacity: 0; transform: translateX(20px);
+      transition: all 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .info-card.visible { opacity: 1; transform: translateX(0); }
+    .info-subject {
+      font-size: 0.6rem; font-weight: 700; letter-spacing: 0.15em;
+      text-transform: uppercase; color: #E07B39; margin-bottom: 0.4rem;
+    }
+    .info-title { font-size: 0.95rem; font-weight: 600; margin-bottom: 0.6rem; line-height: 1.3; }
+    .info-formula {
+      background: rgba(26,86,219,0.3);
+      border: 1px solid rgba(26,86,219,0.5);
+      border-radius: 8px; padding: 0.5rem 0.75rem;
+      font-size: 0.9rem; font-weight: 300;
+      text-align: center; margin-bottom: 0.75rem;
+      letter-spacing: 0.03em; transition: all 0.3s;
+    }
+    .info-desc { font-size: 0.7rem; color: rgba(255,255,255,0.55); line-height: 1.6; }
+
+    /* BOTTOM PHASE CONTROL */
+    .phase-ui {
+      position: fixed; bottom: 2rem; left: 50%;
+      transform: translateX(-50%);
+      z-index: 100;
+      display: flex; flex-direction: column; align-items: center; gap: 0.75rem;
+      opacity: 0; transition: opacity 0.4s; pointer-events: none;
+    }
+    .phase-ui.visible { opacity: 1; pointer-events: all; }
+
+    .phase-label {
+      font-size: 0.75rem; font-weight: 500;
+      color: rgba(255,255,255,0.6); letter-spacing: 0.05em;
+    }
+
+    .phase-dots { display: flex; gap: 0.5rem; }
+    .phase-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: rgba(255,255,255,0.22); transition: all 0.3s;
+    }
+    .phase-dot.active { background: #E07B39; transform: scale(1.35); }
+    .phase-dot.done { background: rgba(26,86,219,0.7); }
+
+    .next-btn {
+      background: rgba(26,86,219,0.65);
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(26,86,219,0.6);
+      border-radius: 40px; padding: 0.65rem 1.75rem;
+      color: #fff; font-size: 0.88rem; font-weight: 500;
+      font-family: 'Inter', sans-serif; cursor: pointer;
+      transition: all 0.2s; -webkit-tap-highlight-color: transparent;
+    }
+    .next-btn:active { transform: scale(0.95); background: rgba(26,86,219,0.9); }
+
+    a-scene {
+      position: fixed; top: 0; left: 0;
+      width: 100%; height: 100%;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="topbar">
+    <a href="../index.html" class="back-btn">← Indietro</a>
+    <span class="demo-title">Coniche — La Parabola</span>
+    <span class="demo-tag">Demo 02</span>
+  </div>
+
+  <div class="marker-status" id="markerStatus">
+    <span class="status-dot"></span>
+    Marker rilevato
+  </div>
+
+  <div class="info-card" id="infoCard">
+    <div class="info-subject">CONICHE · MATEMATICA</div>
+    <div class="info-title" id="cardTitle">La Parabola</div>
+    <div class="info-formula" id="cardFormula">y = ax² + bx + c</div>
+    <div class="info-desc" id="cardDesc">Sezione di un cono con un piano parallelo a una generatrice.</div>
+  </div>
+
+  <div class="instruction" id="instruction">
+    <div class="instruction-icon">📖</div>
+    <h3>Inquadra il marker nel libro</h3>
+    <p>Punta la fotocamera sul simbolo nella pagina delle coniche per attivare l'esperienza.</p>
+  </div>
+
+  <div class="phase-ui" id="phaseUI">
+    <div class="phase-label" id="phaseLabel">Fase 1 di 4</div>
+    <div class="phase-dots">
+      <div class="phase-dot active" id="dot0"></div>
+      <div class="phase-dot" id="dot1"></div>
+      <div class="phase-dot" id="dot2"></div>
+      <div class="phase-dot" id="dot3"></div>
+    </div>
+    <button class="next-btn" id="nextBtn" onclick="nextPhase()">Interseca il cono →</button>
+  </div>
+
+  <!-- ══════════════════════════════════════════════ -->
+  <!--                   AR SCENE                    -->
+  <!-- ══════════════════════════════════════════════ -->
+  <a-scene
+    embedded
+    arjs="sourceType: webcam; debugUIEnabled: false; patternRatio: 0.75;"
+    vr-mode-ui="enabled: false"
+    renderer="logarithmicDepthBuffer: true; antialias: true;"
+    loading-screen="enabled: false">
+
+    <a-marker preset="hiro" id="hiroMarker"
+      smooth="true" smoothCount="5" smoothTolerance="0.01" smoothThreshold="5">
+
+      <!-- ── FASE 0: doppio cono che ruota ── -->
+      <a-entity id="p0">
+        <a-cone position="0 0.7 0" height="1.4" radius-bottom="0.7" radius-top="0.01"
+          color="#1A56DB" material="transparent:true;opacity:0.38;side:double"
+          animation="property:rotation;from:0 0 0;to:0 360 0;dur:9000;loop:true;easing:linear">
+        </a-cone>
+        <a-cone position="0 -0.7 0" height="1.4" radius-bottom="0.7" radius-top="0.01"
+          rotation="180 0 0" color="#1A56DB"
+          material="transparent:true;opacity:0.18;side:double">
+        </a-cone>
+        <a-cylinder position="0 0 0" height="3.2" radius="0.007"
+          color="#FFFFFF" material="transparent:true;opacity:0.3">
+        </a-cylinder>
+        <a-entity position="0 1.95 0"
+          animation="property:position;from:0 1.95 0;to:0 2.1 0;dur:3000;direction:alternate;loop:true;easing:ease-in-out-sine">
+          <a-plane width="2.2" height="0.38" color="#0B1F4B"
+            material="transparent:true;opacity:0.92"></a-plane>
+          <a-text value="Cono — superficie di rotazione" color="#93B4F0"
+            align="center" width="3.4" position="0 0 0.01"></a-text>
+        </a-entity>
+      </a-entity>
+
+      <!-- ── FASE 1: piano secante appare ── -->
+      <a-entity id="p1" visible="false">
+        <a-cone position="0 0.7 0" height="1.4" radius-bottom="0.7" radius-top="0.01"
+          color="#1A56DB" material="transparent:true;opacity:0.3;side:double;wireframe:false">
+        </a-cone>
+        <a-cone position="0 -0.7 0" height="1.4" radius-bottom="0.7" radius-top="0.01"
+          rotation="180 0 0" color="#1A56DB"
+          material="transparent:true;opacity:0.12;side:double">
+        </a-cone>
+        <a-plane position="0 0.28 0" rotation="-90 0 0"
+          width="2.2" height="2.2" color="#E07B39"
+          material="transparent:true;opacity:0;side:double"
+          animation="property:material.opacity;from:0;to:0.22;dur:900;easing:ease-out">
+        </a-plane>
+        <a-torus position="0 0.28 0" radius="0.42" radius-tubular="0.018"
+          segments-tubular="48" color="#E07B39"
+          material="transparent:true;opacity:0"
+          animation="property:material.opacity;from:0;to:1;dur:700;delay:500;easing:ease-out">
+        </a-torus>
+        <a-entity position="0 1.95 0"
+          animation="property:position;from:0 1.95 0;to:0 2.1 0;dur:3000;direction:alternate;loop:true;easing:ease-in-out-sine">
+          <a-plane width="2.6" height="0.38" color="#0B1F4B"
+            material="transparent:true;opacity:0.92"></a-plane>
+          <a-text value="Piano parallelo alla generatrice" color="#E07B39"
+            align="center" width="3.8" position="0 0 0.01"></a-text>
+        </a-entity>
+      </a-entity>
+
+      <!-- ── FASE 2: parabola 3D si rivela e ruota ── -->
+      <a-entity id="p2" visible="false">
+        <!-- cono wireframe sfumato -->
+        <a-cone position="0 0.7 0" height="1.4" radius-bottom="0.7" radius-top="0.01"
+          color="#1A56DB" material="transparent:true;opacity:0.1;side:double;wireframe:true">
+        </a-cone>
+        <!-- entità che ruota con curva parabola dentro -->
+        <a-entity animation="property:rotation;from:0 0 0;to:0 360 0;dur:7000;loop:true;easing:linear">
+          <!-- arco parabola (mezzo toro ruotato) -->
+          <a-torus position="0 0.55 0"
+            radius="0.52" radius-tubular="0.026"
+            theta-start="0" theta-length="180"
+            segments-tubular="44" segments-radial="6"
+            rotation="0 0 90" color="#E07B39"
+            material="transparent:true;opacity:0.95">
+          </a-torus>
+          <!-- asse di simmetria -->
+          <a-cylinder position="0 0.55 0" height="1.1" radius="0.007"
+            color="#FFFFFF" material="transparent:true;opacity:0.5">
+          </a-cylinder>
+          <!-- vertice -->
+          <a-sphere position="0 0 0" radius="0.05" color="#FFFFFF"></a-sphere>
+          <!-- fuoco pulsante -->
+          <a-sphere position="0 0.26 0" radius="0.04" color="#E07B39"
+            animation="property:scale;from:1 1 1;to:1.5 1.5 1.5;dur:700;direction:alternate;loop:true;easing:ease-in-out-sine">
+          </a-sphere>
+          <!-- direttrice -->
+          <a-torus position="0 -0.26 0" radius="0.52" radius-tubular="0.007"
+            theta-start="0" theta-length="180" segments-tubular="30"
+            rotation="0 0 90" color="#93B4F0"
+            material="transparent:true;opacity:0.55">
+          </a-torus>
+        </a-entity>
+        <!-- etichette V F d -->
+        <a-text value="V" color="#FFFFFF" align="center" width="0.9" position="0.12 -0.05 0.01"></a-text>
+        <a-text value="F" color="#E07B39" align="center" width="0.9" position="0.12 0.22 0.01"></a-text>
+        <a-text value="d" color="#93B4F0" align="center" width="0.9" position="0.12 -0.3 0.01"></a-text>
+        <!-- formula flottante -->
+        <a-entity position="0 2 0"
+          animation="property:position;from:0 2 0;to:0 2.18 0;dur:3000;direction:alternate;loop:true;easing:ease-in-out-sine">
+          <a-plane width="1.9" height="0.45" color="#0B1F4B"
+            material="transparent:true;opacity:0.93"></a-plane>
+          <a-text value="y = ax² + bx + c" color="#FFFFFF"
+            align="center" width="3.1" position="0 0.07 0.01"></a-text>
+          <a-text value="Funzione quadratica" color="#93B4F0"
+            align="center" width="2" position="0 -0.13 0.01"></a-text>
+        </a-entity>
+      </a-entity>
+
+      <!-- ── FASE 3: connessione matematica ↔ fisica ── -->
+      <a-entity id="p3" visible="false">
+        <a-entity animation="property:rotation;from:0 0 0;to:0 360 0;dur:5500;loop:true;easing:linear">
+          <a-torus position="0 0.55 0" radius="0.52" radius-tubular="0.026"
+            theta-start="0" theta-length="180"
+            segments-tubular="44" segments-radial="6"
+            rotation="0 0 90" color="#E07B39"
+            material="transparent:true;opacity:0.95">
+          </a-torus>
+          <!-- traiettoria proiettile (verde) -->
+          <a-torus position="0 0.55 0" radius="0.52" radius-tubular="0.01"
+            theta-start="0" theta-length="180"
+            segments-tubular="40" segments-radial="4"
+            rotation="0 60 90" color="#10B981"
+            material="transparent:true;opacity:0.65">
+          </a-torus>
+          <a-cylinder position="0 0.55 0" height="1.1" radius="0.006"
+            color="#FFFFFF" material="transparent:true;opacity:0.35">
+          </a-cylinder>
+          <a-sphere position="0 0 0" radius="0.05" color="#FFFFFF"></a-sphere>
+        </a-entity>
+        <!-- pannello matematica -->
+        <a-entity position="-0.9 1.85 0">
+          <a-plane width="1.55" height="0.82" color="#0B1F4B"
+            material="transparent:true;opacity:0.93"></a-plane>
+          <a-text value="MATEMATICA" color="#93B4F0" align="center"
+            width="1.6" position="0 0.24 0.01"></a-text>
+          <a-text value="y = ax² + bx + c" color="#FFFFFF" align="center"
+            width="1.8" position="0 0.04 0.01"></a-text>
+          <a-text value="parabola geometrica" color="rgba(255,255,255,0.45)" align="center"
+            width="1.4" position="0 -0.18 0.01"></a-text>
+        </a-entity>
+        <!-- pannello fisica -->
+        <a-entity position="0.9 1.85 0">
+          <a-plane width="1.55" height="0.82" color="#0B1F4B"
+            material="transparent:true;opacity:0.93"></a-plane>
+          <a-text value="FISICA" color="#10B981" align="center"
+            width="0.95" position="0 0.24 0.01"></a-text>
+          <a-text value="y = v₀t − ½gt²" color="#FFFFFF" align="center"
+            width="1.8" position="0 0.04 0.01"></a-text>
+          <a-text value="moto del proiettile" color="rgba(255,255,255,0.45)" align="center"
+            width="1.4" position="0 -0.18 0.01"></a-text>
+        </a-entity>
+        <!-- connettore = -->
+        <a-entity position="0 1.85 0">
+          <a-plane width="0.4" height="0.4" color="#0B1F4B"
+            material="transparent:true;opacity:0.93"></a-plane>
+          <a-text value="=" color="#FFFFFF" align="center"
+            width="1" position="0 0 0.01"></a-text>
+        </a-entity>
+      </a-entity>
+
+    </a-marker>
+    <a-entity camera></a-entity>
+  </a-scene>
+
+  <script>
+    let phase = 0;
+
+    const config = [
+      {
+        label: 'Fase 1 di 4',
+        title: 'Il Cono',
+        formula: 'Superficie di rotazione',
+        desc: 'Il cono ruota attorno al suo asse. Tutte le curve coniche nascono dall\'intersezione di questo solido con un piano.',
+        btn: 'Interseca il cono →'
+      },
+      {
+        label: 'Fase 2 di 4',
+        title: 'Piano secante',
+        formula: 'Piano ∥ alla generatrice',
+        desc: 'Quando il piano è parallelo a una generatrice, la curva di intersezione è la parabola.',
+        btn: 'Rivela la parabola →'
+      },
+      {
+        label: 'Fase 3 di 4',
+        title: 'La Parabola',
+        formula: 'y = ax² + bx + c',
+        desc: 'Vertice V, fuoco F e direttrice d. La parabola ruota: è simmetrica rispetto al suo asse.',
+        btn: 'Collega alla fisica →'
+      },
+      {
+        label: 'Fase 4 di 4',
+        title: 'Matematica ↔ Fisica',
+        formula: 'y = v₀t − ½gt²',
+        desc: 'La stessa curva descrive il moto del proiettile. Un unico modello geometrico governa due discipline.',
+        btn: '↺ Ricomincia'
+      }
+    ];
+
+    function nextPhase() {
+      document.getElementById(`p${phase}`).setAttribute('visible', 'false');
+      phase = (phase + 1) % 4;
+      document.getElementById(`p${phase}`).setAttribute('visible', 'true');
+      const c = config[phase];
+      document.getElementById('phaseLabel').textContent = c.label;
+      document.getElementById('cardTitle').textContent = c.title;
+      document.getElementById('cardFormula').textContent = c.formula;
+      document.getElementById('cardDesc').textContent = c.desc;
+      document.getElementById('nextBtn').textContent = c.btn;
+      for (let i = 0; i < 4; i++) {
+        const d = document.getElementById(`dot${i}`);
+        d.className = 'phase-dot' + (i < phase ? ' done' : '') + (i === phase ? ' active' : '');
+      }
+    }
+
+    const marker = document.querySelector('#hiroMarker');
+    marker.addEventListener('markerFound', () => {
+      document.getElementById('markerStatus').classList.add('visible');
+      document.getElementById('instruction').classList.add('hidden');
+      document.getElementById('infoCard').classList.add('visible');
+      document.getElementById('phaseUI').classList.add('visible');
+    });
+    marker.addEventListener('markerLost', () => {
+      document.getElementById('markerStatus').classList.remove('visible');
+      document.getElementById('infoCard').classList.remove('visible');
+    });
+  </script>
+
+</body>
+</html>
