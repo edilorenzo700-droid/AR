@@ -1,192 +1,151 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MathAR — Sistema Didattico Interattivo</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --navy: #0B1F4B;
-      --blue: #1A56DB;
-      --light-blue: #EBF2FF;
-      --orange: #E07B39;
-      --white: #FFFFFF;
-      --gray: #6B7280;
-      --border: #E5E9F0;
-    }
-
-    body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: #F8FAFC;
-      color: var(--navy);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 2rem;
-    }
-
-    .logo {
-      font-size: 0.75rem;
-      font-weight: 600;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      color: var(--blue);
-      margin-bottom: 0.5rem;
-    }
-
-    h1 {
-      font-size: clamp(2rem, 5vw, 3.5rem);
-      font-weight: 300;
-      color: var(--navy);
-      letter-spacing: -0.02em;
-      margin-bottom: 0.75rem;
-      text-align: center;
-    }
-
-    h1 span { font-weight: 600; }
-
-    .subtitle {
-      font-size: 1rem;
-      color: var(--gray);
-      margin-bottom: 3rem;
-      text-align: center;
-      max-width: 480px;
-      line-height: 1.6;
-    }
-
-    .demos {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 1.5rem;
-      width: 100%;
-      max-width: 700px;
-    }
-
-    .card {
-      background: var(--white);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 2rem;
-      text-decoration: none;
-      color: inherit;
-      transition: all 0.2s ease;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .card::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 3px;
-      background: var(--blue);
-    }
-
-    .card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 20px 40px rgba(11,31,75,0.1);
-      border-color: var(--blue);
-    }
-
-    .card-tag {
-      font-size: 0.7rem;
-      font-weight: 600;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--blue);
-      margin-bottom: 1rem;
-    }
-
-    .card h2 {
-      font-size: 1.25rem;
-      font-weight: 600;
-      margin-bottom: 0.5rem;
-    }
-
-    .card p {
-      font-size: 0.875rem;
-      color: var(--gray);
-      line-height: 1.6;
-      margin-bottom: 1.5rem;
-    }
-
-    .card-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      font-size: 0.875rem;
-      font-weight: 500;
-      color: var(--blue);
-    }
-
-    .card-btn::after { content: '→'; }
-
-    .icon {
-      width: 40px; height: 40px;
-      background: var(--light-blue);
-      border-radius: 10px;
-      display: flex; align-items: center; justify-content: center;
-      margin-bottom: 1.25rem;
-      font-size: 1.25rem;
-    }
-
-    .note {
-      margin-top: 2.5rem;
-      font-size: 0.75rem;
-      color: var(--gray);
-      text-align: center;
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-    }
-
-    .dot {
-      width: 6px; height: 6px;
-      background: #10B981;
-      border-radius: 50%;
-      animation: pulse 2s infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.4; }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>MathAR — Sistema Didattico</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0B1F4B;
+  --blue:#1A56DB;
+  --orange:#E07B39;
+  --light:#F0F4FF;
+  --gray:#6B7280;
+  --border:#DDE3EF;
+}
+body{
+  font-family:'Inter',sans-serif;
+  background:#F8FAFC;
+  color:var(--navy);
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:2rem 1.5rem;
+}
+.badge{
+  font-size:0.7rem;font-weight:700;
+  letter-spacing:0.18em;text-transform:uppercase;
+  color:var(--blue);margin-bottom:1rem;
+  display:flex;align-items:center;gap:0.5rem;
+}
+.badge::before,.badge::after{
+  content:'';flex:1;height:1px;background:var(--border);
+}
+h1{
+  font-size:clamp(1.8rem,5vw,3rem);
+  font-weight:300;letter-spacing:-0.02em;
+  text-align:center;margin-bottom:0.6rem;
+  line-height:1.2;
+}
+h1 strong{font-weight:700;color:var(--blue)}
+.sub{
+  font-size:0.95rem;color:var(--gray);
+  text-align:center;max-width:420px;
+  line-height:1.7;margin-bottom:2.5rem;
+}
+.cards{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+  gap:1.25rem;width:100%;max-width:640px;
+  margin-bottom:2rem;
+}
+.card{
+  background:#fff;border:1.5px solid var(--border);
+  border-radius:18px;padding:1.75rem;
+  text-decoration:none;color:inherit;
+  transition:all 0.22s cubic-bezier(0.34,1.56,0.64,1);
+  display:block;position:relative;overflow:hidden;
+}
+.card::after{
+  content:'';position:absolute;
+  top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--blue),#5B8FFF);
+}
+.card:nth-child(2)::after{
+  background:linear-gradient(90deg,var(--orange),#F5A366);
+}
+.card:active{transform:scale(0.97)}
+.card:hover{
+  transform:translateY(-5px);
+  box-shadow:0 16px 40px rgba(11,31,75,0.12);
+  border-color:var(--blue);
+}
+.card:nth-child(2):hover{border-color:var(--orange)}
+.icon{
+  width:44px;height:44px;border-radius:12px;
+  background:var(--light);display:flex;
+  align-items:center;justify-content:center;
+  font-size:1.3rem;margin-bottom:1rem;
+}
+.card:nth-child(2) .icon{background:#FFF3EC}
+.tag{
+  font-size:0.62rem;font-weight:700;
+  letter-spacing:0.14em;text-transform:uppercase;
+  color:var(--blue);margin-bottom:0.4rem;
+}
+.card:nth-child(2) .tag{color:var(--orange)}
+.card h2{
+  font-size:1.1rem;font-weight:600;
+  margin-bottom:0.4rem;
+}
+.card p{
+  font-size:0.82rem;color:var(--gray);
+  line-height:1.6;margin-bottom:1.2rem;
+}
+.cta{
+  font-size:0.82rem;font-weight:600;
+  color:var(--blue);
+  display:flex;align-items:center;gap:0.3rem;
+}
+.card:nth-child(2) .cta{color:var(--orange)}
+.cta::after{content:'→';transition:transform 0.2s}
+.card:hover .cta::after{transform:translateX(4px)}
+.tip{
+  font-size:0.72rem;color:var(--gray);
+  text-align:center;
+  display:flex;align-items:center;gap:0.5rem;
+  background:#fff;border:1px solid var(--border);
+  border-radius:40px;padding:0.5rem 1rem;
+}
+.dot{
+  width:7px;height:7px;border-radius:50%;
+  background:#10B981;
+  animation:blink 2s infinite;
+}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+</style>
 </head>
 <body>
 
-  <div class="logo">MathAR · Sistema Didattico</div>
-  <h1>Matematica in <span>Realtà Aumentata</span></h1>
-  <p class="subtitle">Due demo interattive per collegare formule matematiche al mondo reale. Aprire da iPad per l'esperienza AR completa.</p>
+<div class="badge">MathAR · Sistema Didattico Interattivo</div>
+<h1>Matematica in<br><strong>Realtà Aumentata</strong></h1>
+<p class="sub">Collega le formule matematiche al mondo reale. Apri da smartphone o iPad e concedi l'accesso alla fotocamera.</p>
 
-  <div class="demos">
-    <a href="demo1/index.html" class="card">
-      <div class="icon">🏠</div>
-      <div class="card-tag">Demo 01</div>
-      <h2>Stanza + Formule</h2>
-      <p>Inquadra l'ambiente: le superfici reali attivano le formule matematiche che le descrivono.</p>
-      <span class="card-btn">Avvia demo</span>
-    </a>
+<div class="cards">
+  <a href="demo1/index.html" class="card">
+    <div class="icon">🏠</div>
+    <div class="tag">Demo 01 · Ambiente</div>
+    <h2>Stanza + Formule</h2>
+    <p>Inquadra gli oggetti intorno a te. Tocca un elemento per vedere la formula matematica che lo descrive.</p>
+    <span class="cta">Avvia esperienza</span>
+  </a>
+  <a href="demo2/index.html" class="card">
+    <div class="icon">∪</div>
+    <div class="tag">Demo 02 · Marker</div>
+    <h2>Parabola 3D</h2>
+    <p>Stampa il marker e inquadralo con la fotocamera. Il cono e la parabola appariranno sopra la pagina.</p>
+    <span class="cta">Avvia esperienza</span>
+  </a>
+</div>
 
-    <a href="demo2/index.html" class="card">
-      <div class="icon">∪</div>
-      <div class="card-tag">Demo 02</div>
-      <h2>Marker → Parabola</h2>
-      <p>Inquadra la pagina del libro: il cono si interseca col piano e costruisce la parabola in tempo reale.</p>
-      <span class="card-btn">Avvia demo</span>
-    </a>
-  </div>
-
-  <p class="note">
-    <span class="dot"></span>
-    Richiede accesso alla fotocamera · Ottimizzato per iPad Pro con LiDAR
-  </p>
+<div class="tip">
+  <span class="dot"></span>
+  Funziona su Safari (iOS) e Chrome (Android) · Richiede fotocamera
+</div>
 
 </body>
 </html>
